@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sorteio — Clube Unibox</title>
+  <style>
+    :root {
+      --pink: #e91e8c;
+      --pink-dark: #c0166e;
+      --pink-light: #ff6ec7;
+      --purple: #7b2fff;
+      --purple-dark: #5a1fcc;
+      --dark: #0d0014;
+      --card: #1a0028;
+      --card2: #230035;
+      --text: #f0e6ff;
+      --muted: #9e7bb5;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── Stars ── */
+    #stars {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: white;
+      animation: twinkle var(--d) ease-in-out infinite alternate;
+      opacity: 0;
+    }
+    @keyframes twinkle { to { opacity: var(--o); } }
+
+    /* ── Header ── */
+    header {
+      width: 100%;
+      text-align: center;
+      padding: 2.5rem 1rem 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+    header img.logo {
+      height: 56px;
+      margin-bottom: 0.75rem;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--pink-light), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+    header p.sub {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 0.3rem;
+    }
+
+    /* ── Main container ── */
+    main {
+      width: min(700px, 95vw);
+      position: relative;
+      z-index: 1;
+      padding-bottom: 4rem;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid #3a0060;
+      border-radius: 20px;
+      padding: 2rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 4px 32px #00000060;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--pink-light);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card h2 span.num {
+      background: var(--pink);
+      color: white;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Upload zone ── */
+    #drop-zone {
+      border: 2px dashed #5a1f8a;
+      border-radius: 14px;
+      padding: 2.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    #drop-zone:hover, #drop-zone.drag-over {
+      border-color: var(--pink);
+      background: #2d003e;
+    }
+    #drop-zone .icon { font-size: 2.5rem; }
+    #drop-zone p { color: var(--muted); margin-top: 0.5rem; font-size: 0.9rem; }
+    #drop-zone strong { color: var(--text); }
+    #file-input { display: none; }
+    #file-name {
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--pink-light);
+      font-weight: 600;
+    }
+
+    /* ── Selects ── */
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 500px) { .row-2 { grid-template-columns: 1fr; } }
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.4rem;
+    }
+    select {
+      width: 100%;
+      background: #12001e;
+      border: 1px solid #5a1f8a;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 0.65rem 0.9rem;
+      font-size: 0.95rem;
+      appearance: none;
+      cursor: pointer;
+    }
+    select:focus { outline: 2px solid var(--pink); border-color: var(--pink); }
+    select option { background: #12001e; }
+
+    /* ── Stats bar ── */
+    #stats {
+      display: none;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .sort-btn {
+      background: #2a003a;
+      border: 1px solid #5a1f8a;
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sort-btn.active {
+      background: var(--pink);
+      border-color: var(--pink);
+      color: white;
+    }
+
+    .qty-btn {
+      background: #2a003a;
+      border: 1px solid #5a1f8a;
+      color: var(--pink-light);
+      border-radius: 8px;
+      width: 32px; height: 32px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      line-height: 1;
+      transition: background 0.15s;
+    }
+    .qty-btn:hover { background: #3a0060; }
+    .qty-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    #stats.visible { display: grid; }
+    .stat-box {
+      background: var(--card2);
+      border-radius: 12px;
+      padding: 0.85rem;
+      text-align: center;
+    }
+    .stat-box .val {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--pink-light);
+    }
+    .stat-box .lbl {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.15rem;
+    }
+
+    /* ── Draw button ── */
+    #btn-draw {
+      width: 100%;
+      padding: 1rem;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: opacity 0.2s, transform 0.1s;
+      box-shadow: 0 4px 20px #e91e8c60;
+      margin-top: 0.5rem;
+    }
+    #btn-draw:hover { opacity: 0.92; }
+    #btn-draw:active { transform: scale(0.98); }
+    #btn-draw:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Suspense overlay (computing) ── */
+    #suspense {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: #070010e8;
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 2rem;
+      gap: 0;
+    }
+    #suspense.active { display: flex; }
+
+    #spin-rings {
+      position: relative;
+      width: 120px; height: 120px;
+      margin-bottom: 2.5rem;
+    }
+    .ring {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      border: 3px solid transparent;
+    }
+    .r1 { border-top-color: var(--pink); animation: spin 1.2s linear infinite; }
+    .r2 { inset: 14px; border-right-color: var(--purple); animation: spin 1.8s linear infinite reverse; }
+    .r3 { inset: 28px; border-bottom-color: var(--pink-light); animation: spin 1s linear infinite; }
+    .ring-dot {
+      position: absolute; inset: 0; margin: auto;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      animation: pulseDot 1.2s ease-in-out infinite alternate;
+      box-shadow: 0 0 16px var(--pink);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulseDot {
+      from { transform: scale(0.8); opacity: 0.6; }
+      to   { transform: scale(1.2); opacity: 1; }
+    }
+
+    #phrase {
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      color: var(--muted);
+      min-height: 1.8rem;
+      margin-bottom: 1.5rem;
+      font-weight: 500;
+    }
+    #prog-wrap {
+      width: min(460px, 90vw);
+      background: #2a003a;
+      border-radius: 999px;
+      height: 8px;
+      overflow: hidden;
+    }
+    #prog-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--pink), var(--purple));
+      transition: width 0.15s;
+      box-shadow: 0 0 12px var(--pink);
+    }
+
+    @keyframes pulse {
+      0%   { transform: scale(0.5); opacity: 0; }
+      60%  { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes bounceIn {
+      0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+      60%  { transform: scale(1.2) rotate(5deg); }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes glow-pulse {
+      0%, 100% { box-shadow: 0 0 80px 20px #e91e8c40; }
+      50%       { box-shadow: 0 0 120px 40px #7b2fff40; }
+    }
+
+    /* ── Reveal overlay ── */
+    #reveal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: #070010f0;
+      backdrop-filter: blur(10px);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 2rem;
+      text-align: center;
+      overflow-y: auto;
+    }
+    #reveal-overlay.active { display: flex; }
+
+    #confetti-canvas {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 199;
+    }
+
+    /* Waiting state */
+    .reveal-state { width: 100%; display: flex; flex-direction: column; align-items: center; }
+    #reveal-place-label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    #reveal-mystery {
+      font-size: clamp(5rem, 18vw, 9rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--pink-light), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1;
+    }
+    #reveal-countdown {
+      font-size: clamp(3rem, 12vw, 6rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--pink-light), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1;
+      min-height: 1.2em;
+    }
+
+    /* Shown state */
+    #reveal-box {
+      background: var(--card);
+      border: 1px solid #5a1f8a;
+      border-radius: 24px;
+      padding: 2.5rem 3rem;
+      animation: glow-pulse 2s ease-in-out infinite;
+      max-width: 90vw;
+    }
+    #reveal-emoji { font-size: 4rem; animation: bounceIn 0.6s ease; }
+    .winner-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+    #reveal-name {
+      font-size: clamp(1.8rem, 6vw, 3rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, #fff, var(--pink-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 0.5rem 0;
+      animation: slideUp 0.5s 0.2s both ease;
+    }
+    #reveal-cupons {
+      color: var(--muted);
+      font-size: 0.9rem;
+      animation: slideUp 0.5s 0.35s both ease;
+    }
+    #reveal-cupons strong { color: var(--pink-light); }
+
+    #revealed-list { margin-top: 1.2rem; width: min(420px, 90vw); }
+    #revealed-list .rev-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0.7rem;
+      background: #1a002855;
+      border-radius: 8px;
+      margin-bottom: 0.3rem;
+      font-size: 0.85rem;
+    }
+    #revealed-list .rev-place { color: var(--muted); font-size: 0.75rem; }
+
+    /* ── Or divider ── */
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 0.25rem 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .or-divider::before, .or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #3a0060;
+    }
+
+    /* ── Quick list ── */
+    #quick-list {
+      width: 100%;
+      min-height: 140px;
+      background: #12001e;
+      border: 1px solid #5a1f8a;
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 0.95rem;
+      padding: 0.75rem 0.9rem;
+      resize: vertical;
+      font-family: inherit;
+      line-height: 1.6;
+      margin-top: 0.4rem;
+    }
+    #quick-list:focus { outline: 2px solid var(--purple); border-color: var(--purple); }
+    #quick-list::placeholder { color: #5a3a7a; }
+
+    #btn-quick-draw {
+      width: 100%;
+      margin-top: 0.75rem;
+      padding: 0.9rem;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+      color: white;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      box-shadow: 0 4px 20px #7b2fff50;
+    }
+    #btn-quick-draw:hover { opacity: 0.9; }
+    #btn-quick-draw:active { transform: scale(0.98); }
+    #btn-quick-draw:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── Participants preview ── */
+    #participants-list {
+      max-height: 220px;
+      overflow-y: auto;
+      margin-top: 1rem;
+      display: none;
+    }
+    #participants-list.visible { display: block; }
+    #participants-list::-webkit-scrollbar { width: 4px; }
+    #participants-list::-webkit-scrollbar-track { background: transparent; }
+    #participants-list::-webkit-scrollbar-thumb { background: #5a1f8a; border-radius: 4px; }
+
+    .participant-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.45rem 0.6rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+    .participant-row:nth-child(odd) { background: #1a002855; }
+    .participant-row .p-name { color: var(--text); }
+    .participant-row .p-cups {
+      background: #3a0060;
+      color: var(--pink-light);
+      border-radius: 999px;
+      padding: 0.1rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+  </style>
+</head>
+<body>
+
+<div id="stars"></div>
+
+<header>
+  <h1>✨ Sorteio Clube Unibox</h1>
+  <p class="sub">Faça o upload da planilha ou cole uma lista de nomes para sortear</p>
+</header>
+
+<main>
+
+  <!-- Step 1: Upload -->
+  <div class="card">
+    <h2><span class="num">1</span> Planilha de participantes</h2>
+    <div id="drop-zone">
+      <div class="icon">📄</div>
+      <p><strong>Arraste e solte</strong> o arquivo CSV aqui<br>ou clique para selecionar</p>
+      <div id="file-name"></div>
+    </div>
+    <input type="file" id="file-input" accept=".csv,.txt" />
+  </div>
+
+  <!-- Separator -->
+  <div class="or-divider"><span>ou</span></div>
+
+  <!-- Quick list -->
+  <div class="card">
+    <h2><span class="num" style="background:var(--purple)">✎</span> Lista rápida</h2>
+    <label>Cole os nomes aqui, um por linha</label>
+    <textarea id="quick-list" placeholder="Maria Silva&#10;João Souza&#10;Ana Costa&#10;..."></textarea>
+    <div id="quick-count" style="font-size:0.8rem; color:var(--muted); margin-top:0.5rem; min-height:1.1rem;"></div>
+    <button id="btn-quick-draw" disabled>🎲 Sortear da lista</button>
+  </div>
+
+  <!-- Step 2: Columns -->
+  <div class="card" id="step2" style="display:none">
+    <h2><span class="num">2</span> Configurar colunas</h2>
+    <div class="row-2">
+      <div>
+        <label>Coluna do nome</label>
+        <select id="col-name"><option value="">— selecione —</option></select>
+      </div>
+      <div>
+        <label>Coluna de cupons</label>
+        <select id="col-cupons"><option value="">— selecione —</option></select>
+      </div>
+    </div>
+
+    <div id="stats">
+      <div class="stat-box"><div class="val" id="stat-part">0</div><div class="lbl">Participantes</div></div>
+    </div>
+
+    <div id="list-header" style="display:none; justify-content:space-between; align-items:center; margin-top:1rem; margin-bottom:0.25rem;">
+      <span style="font-size:0.78rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Participantes</span>
+      <div id="sort-toggle" style="display:flex; gap:0.4rem;">
+        <button class="sort-btn active" data-sort="name">A–Z</button>
+        <button class="sort-btn" data-sort="cups">Cupons ↓</button>
+      </div>
+    </div>
+    <div id="participants-list"></div>
+  </div>
+
+  <!-- Step 3: Draw -->
+  <div class="card" id="step3" style="display:none">
+    <h2><span class="num">3</span> Realizar sorteio</h2>
+    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:0.75rem;">
+      <label style="margin:0; white-space:nowrap;">Número de ganhadores</label>
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <button class="qty-btn" id="qty-down">−</button>
+        <span id="qty-val" style="font-size:1.2rem; font-weight:800; min-width:2ch; text-align:center;">1</span>
+        <button class="qty-btn" id="qty-up">+</button>
+      </div>
+    </div>
+    <button id="btn-draw" disabled>🎲 Sortear</button>
+  </div>
+
+</main>
+
+<!-- Suspense overlay (computing phase — sem nomes) -->
+<div id="suspense">
+  <div id="spin-rings">
+    <div class="ring r1"></div>
+    <div class="ring r2"></div>
+    <div class="ring r3"></div>
+    <div class="ring-dot"></div>
+  </div>
+  <div id="phrase">Iniciando computação...</div>
+  <div id="prog-wrap"><div id="prog-bar"></div></div>
+</div>
+
+<!-- Reveal overlay (revelação um a um) -->
+<canvas id="confetti-canvas"></canvas>
+<div id="reveal-overlay">
+  <!-- Estado: aguardando revelar -->
+  <div id="reveal-waiting" class="reveal-state">
+    <div id="reveal-place-label"></div>
+    <div id="reveal-mystery">?</div>
+    <div id="reveal-countdown"></div>
+  </div>
+  <!-- Estado: nome revelado -->
+  <div id="reveal-shown" class="reveal-state" style="display:none">
+    <div id="reveal-box">
+      <div id="reveal-emoji" style="font-size:4rem;"></div>
+      <div class="winner-label" id="reveal-place-text"></div>
+      <div id="reveal-name"></div>
+      <div id="reveal-cupons"></div>
+      <button id="btn-next-reveal" style="margin-top:1.2rem; padding:0.8rem 2.2rem; border:none; border-radius:12px; background:linear-gradient(135deg,var(--pink),var(--purple)); color:white; font-size:1rem; font-weight:800; cursor:pointer; box-shadow:0 4px 20px #e91e8c50; display:none;">
+        Revelar próximo ▼
+      </button>
+    </div>
+    <!-- Lista dos já revelados (colocações abaixo da atual) -->
+    <div id="revealed-list" style="margin-top:1.2rem; width:min(420px,90vw); display:none;"></div>
+  </div>
+</div>
+
+<script>
+/* ── Stars ── */
+(function(){
+  const c = document.getElementById('stars');
+  for(let i=0;i<120;i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random()*2.5+0.5;
+    s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${(Math.random()*3+1).toFixed(1)}s;--o:${(Math.random()*0.8+0.1).toFixed(2)};animation-delay:${(Math.random()*4).toFixed(1)}s`;
+    c.appendChild(s);
+  }
+})();
+
+/* ── State ── */
+let rows = [];
+let participants = []; // {name, cups}
+
+/* ── File upload ── */
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if(file) loadFile(file);
+});
+fileInput.addEventListener('change', () => { if(fileInput.files[0]) loadFile(fileInput.files[0]); });
+
+function loadFile(file) {
+  document.getElementById('file-name').textContent = '📎 ' + file.name;
+  const reader = new FileReader();
+  reader.onload = e => parseCSV(e.target.result);
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if(lines.length < 2) return alert('Arquivo muito curto ou vazio.');
+
+  // Detect delimiter
+  const delimiters = [',', ';', '\t'];
+  let delim = ',';
+  let maxCount = 0;
+  for(const d of delimiters){
+    const c = (lines[0].match(new RegExp('\\'+d,'g'))||[]).length;
+    if(c>maxCount){ maxCount=c; delim=d; }
+  }
+
+  const header = parseCSVLine(lines[0], delim);
+  rows = lines.slice(1).filter(l=>l.trim()).map(l => {
+    const vals = parseCSVLine(l, delim);
+    const obj = {};
+    header.forEach((h,i) => obj[h.trim()] = (vals[i]||'').trim());
+    return obj;
+  });
+
+  populateSelects(header.map(h=>h.trim()));
+  document.getElementById('step2').style.display = '';
+  document.getElementById('step3').style.display = '';
+
+  // Auto-detect columns
+  const lh = h => h.toLowerCase();
+  const nameGuess = header.find(h => lh(h).includes('nome'));
+  const cupsGuess = header.find(h => lh(h).includes('cupom') || lh(h).includes('cupon') || lh(h).includes('ticket'));
+  if(nameGuess) document.getElementById('col-name').value = nameGuess.trim();
+  if(cupsGuess) document.getElementById('col-cupons').value = cupsGuess.trim();
+  refreshConfig();
+}
+
+function parseCSVLine(line, delim) {
+  const result = [];
+  let cur = '', inQ = false;
+  for(let i=0;i<line.length;i++){
+    const ch = line[i];
+    if(ch==='"'){ inQ=!inQ; }
+    else if(ch===delim && !inQ){ result.push(cur); cur=''; }
+    else { cur+=ch; }
+  }
+  result.push(cur);
+  return result;
+}
+
+function populateSelects(headers) {
+  ['col-name','col-cupons'].forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="">— selecione —</option>';
+    headers.forEach(h => {
+      const o = document.createElement('option');
+      o.value = h; o.textContent = h;
+      sel.appendChild(o);
+    });
+  });
+}
+
+document.getElementById('col-name').addEventListener('change', refreshConfig);
+document.getElementById('col-cupons').addEventListener('change', refreshConfig);
+
+function refreshConfig() {
+  const cn = document.getElementById('col-name').value;
+  const cc = document.getElementById('col-cupons').value;
+  const btn = document.getElementById('btn-draw');
+
+  if(!cn || !cc){ btn.disabled = true; document.getElementById('stats').classList.remove('visible'); return; }
+
+  participants = rows.map(r => {
+    const name = r[cn] || '';
+    const raw = (r[cc]||'').replace(/[^\d.,]/g,'').replace(',','.');
+    const cups = Math.max(0, parseInt(raw)||0);
+    return {name, cups};
+  }).filter(p => p.name && p.cups > 0);
+
+  const total = participants.reduce((s,p)=>s+p.cups,0);
+
+  document.getElementById('stat-part').textContent = participants.length;
+  document.getElementById('stats').classList.add('visible');
+
+  renderList();
+  document.getElementById('list-header').style.display = 'flex';
+  btn.disabled = participants.length < 1;
+}
+
+let currentSort = 'name';
+
+function renderList() {
+  const list = document.getElementById('participants-list');
+  list.innerHTML = '';
+  const sorted = [...participants].sort(currentSort === 'name'
+    ? (a,b) => a.name.localeCompare(b.name, 'pt-BR')
+    : (a,b) => b.cups - a.cups
+  );
+  sorted.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'participant-row';
+    row.innerHTML = `<span class="p-name">${p.name}</span><span class="p-cups">${p.cups.toLocaleString('pt-BR')} cupons</span>`;
+    list.appendChild(row);
+  });
+  list.classList.add('visible');
+}
+
+document.getElementById('sort-toggle').addEventListener('click', e => {
+  const btn = e.target.closest('.sort-btn');
+  if(!btn) return;
+  currentSort = btn.dataset.sort;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.toggle('active', b === btn));
+  renderList();
+});
+
+/* ── Quantity control ── */
+let drawQty = 1;
+const qtyVal = document.getElementById('qty-val');
+const qtyDown = document.getElementById('qty-down');
+const qtyUp = document.getElementById('qty-up');
+
+function updateQty(n) {
+  drawQty = Math.max(1, n);
+  qtyVal.textContent = drawQty;
+  qtyDown.disabled = drawQty <= 1;
+}
+updateQty(1);
+qtyDown.addEventListener('click', () => updateQty(drawQty - 1));
+qtyUp.addEventListener('click', () => updateQty(drawQty + 1));
+
+/* ── Helpers ── */
+const phrases = [
+  'Computando probabilidades...',
+  'Somando cupons dos participantes...',
+  'Embaralhando os dados...',
+  'Calculando chances de cada um...',
+  'Consultando o oráculo do sorteio...',
+  'Verificando integridade dos dados...',
+  'Aplicando algoritmo de aleatoriedade...',
+  'Processando o destino de cada cupom...',
+  'Quase lá...',
+  'Finalizando os cálculos...',
+];
+
+const placeEmoji = ['🥇','🥈','🥉'];
+const ord = n => `${n}º lugar`;
+
+function weightedRandom(pool) {
+  const total = pool.reduce((s,p) => s + p.cups, 0);
+  let r = Math.random() * total;
+  for (const p of pool) { r -= p.cups; if (r <= 0) return p; }
+  return pool[pool.length - 1];
+}
+
+/* ── Draw: sorteia todos de uma vez, depois revela do último ao 1º ── */
+let revealQueue = []; // ordem de revelação: último → primeiro
+let revealIdx = 0;    // próximo a revelar
+let alreadyRevealed = []; // já mostrados (do último para cima)
+
+document.getElementById('btn-draw').addEventListener('click', () => {
+  // 1. Sortear todos de uma vez
+  let pool = [...participants];
+  const drawn = [];
+  const qty = Math.min(drawQty, pool.length);
+  for (let i = 0; i < qty; i++) {
+    const w = weightedRandom(pool);
+    pool = pool.filter(p => p !== w);
+    drawn.push({ place: i + 1, name: w.name, cups: w.cups });
+  }
+  // 2. Fila de revelação: do último ao 1º
+  revealQueue = [...drawn].reverse();
+  revealIdx = 0;
+  alreadyRevealed = [];
+
+  // 3. Iniciar animação de suspense (única, sem nomes)
+  startSuspense(() => startReveal());
+});
+
+/* ── Animação de suspense (computing) ── */
+function startSuspense(onDone) {
+  const suspense = document.getElementById('suspense');
+  const phraseEl = document.getElementById('phrase');
+  const progBar  = document.getElementById('prog-bar');
+
+  suspense.classList.add('active');
+  progBar.style.width = '0%';
+  phraseEl.textContent = phrases[0];
+
+  let elapsed = 0;
+  const TOTAL = 7000;
+  const TICK  = 100;
+  let phraseIdx = 0;
+  let phraseTimer = 0;
+
+  const timer = setInterval(() => {
+    elapsed += TICK;
+    phraseTimer += TICK;
+    progBar.style.width = Math.min(elapsed / TOTAL * 100, 100) + '%';
+
+    if (phraseTimer >= 900) {
+      phraseTimer = 0;
+      phraseIdx = (phraseIdx + 1) % phrases.length;
+      phraseEl.textContent = phrases[phraseIdx];
+    }
+
+    if (elapsed >= TOTAL) {
+      clearInterval(timer);
+      phraseEl.textContent = 'Pronto! Revelando os ganhadores...';
+      progBar.style.width = '100%';
+      setTimeout(() => {
+        suspense.classList.remove('active');
+        onDone();
+      }, 900);
+    }
+  }, TICK);
+}
+
+/* ── Revelação um a um ── */
+function startReveal() {
+  if (revealIdx >= revealQueue.length) return;
+  const w = revealQueue[revealIdx];
+  showRevealWaiting(w, () => showRevealName(w));
+}
+
+function showRevealWaiting(w, onReveal) {
+  const overlay = document.getElementById('reveal-overlay');
+  const waiting = document.getElementById('reveal-waiting');
+  const shown   = document.getElementById('reveal-shown');
+
+  document.getElementById('reveal-place-label').textContent = ord(w.place);
+  document.getElementById('reveal-mystery').textContent = '?';
+  document.getElementById('reveal-countdown').textContent = '';
+
+  waiting.style.display = 'flex';
+  shown.style.display   = 'none';
+  overlay.classList.add('active');
+
+  // Countdown 3-2-1 antes de revelar
+  let n = 3;
+  const cdEl = document.getElementById('reveal-countdown');
+  document.getElementById('reveal-mystery').style.display = 'none';
+
+  function tick() {
+    if (n === 0) { onReveal(); return; }
+    cdEl.textContent = n;
+    cdEl.style.animation = 'none';
+    void cdEl.offsetWidth;
+    cdEl.style.animation = 'pulse 0.75s ease';
+    n--;
+    setTimeout(tick, 900);
+  }
+  setTimeout(tick, 400);
+}
+
+function showRevealName(w) {
+  const waiting = document.getElementById('reveal-waiting');
+  const shown   = document.getElementById('reveal-shown');
+  const isLast  = revealIdx === revealQueue.length - 1; // último a revelar = 1º lugar
+
+  document.getElementById('reveal-emoji').textContent = placeEmoji[w.place - 1] || '🏅';
+  document.getElementById('reveal-place-text').textContent = ord(w.place);
+  document.getElementById('reveal-name').textContent = w.name;
+  document.getElementById('reveal-cupons').innerHTML = w.cups !== null
+    ? `<strong>${w.cups.toLocaleString('pt-BR')} cupons</strong>`
+    : '';
+
+  // Lista dos já revelados (colocações mais baixas que a atual)
+  const listEl = document.getElementById('revealed-list');
+  if (alreadyRevealed.length > 0) {
+    listEl.style.display = '';
+    listEl.innerHTML = alreadyRevealed.map(r =>
+      `<div class="rev-row">
+        <span>${placeEmoji[r.place-1]||'🏅'} ${r.name}</span>
+        <span class="rev-place">${ord(r.place)}</span>
+      </div>`
+    ).join('');
+  } else {
+    listEl.style.display = 'none';
+  }
+
+  const btnNext = document.getElementById('btn-next-reveal');
+  if (isLast) {
+    btnNext.style.display = 'none';
+  } else {
+    btnNext.style.display = '';
+    const next = revealQueue[revealIdx + 1];
+    btnNext.textContent = `Revelar ${ord(next.place)} ▼`;
+  }
+
+  waiting.style.display = 'none';
+  shown.style.display   = 'flex';
+
+  alreadyRevealed.unshift(w); // adiciona no topo (revelações já feitas)
+  revealIdx++;
+
+  if (isLast) launchConfetti();
+}
+
+document.getElementById('btn-next-reveal').addEventListener('click', () => {
+  stopConfetti();
+  startReveal();
+});
+
+/* ── Quick list ── */
+const quickListEl = document.getElementById('quick-list');
+const quickCountEl = document.getElementById('quick-count');
+const btnQuickDraw = document.getElementById('btn-quick-draw');
+
+quickListEl.addEventListener('input', () => {
+  const names = parseQuickList();
+  if (names.length > 0) {
+    quickCountEl.textContent = `${names.length} nome${names.length > 1 ? 's' : ''} na lista`;
+    btnQuickDraw.disabled = false;
+  } else {
+    quickCountEl.textContent = '';
+    btnQuickDraw.disabled = true;
+  }
+});
+
+function parseQuickList() {
+  return quickListEl.value
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 0);
+}
+
+btnQuickDraw.addEventListener('click', () => {
+  const names = parseQuickList();
+  if (!names.length) return;
+  const winner = names[Math.floor(Math.random() * names.length)];
+  // Reutiliza o mesmo suspense e revelação, mas com 1 ganhador sem peso
+  revealQueue = [{ place: 1, name: winner, cups: null }];
+  revealIdx = 0;
+  alreadyRevealed = [];
+  startSuspense(() => startReveal());
+});
+
+/* ── Confetti ── */
+let confettiAnim, confettiParticles = [];
+
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#e91e8c','#ff6ec7','#7b2fff','#fff','#ffeb3b','#00e5ff'];
+  confettiParticles = Array.from({length:160}, () => ({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height - canvas.height,
+    r: Math.random()*7+3,
+    d: Math.random()*120+100,
+    color: colors[Math.floor(Math.random()*colors.length)],
+    tilt: Math.random()*10-10,
+    tiltAngle: 0,
+    tiltSpeed: Math.random()*0.07+0.05,
+    angle: 0,
+    angleSpeed: Math.random()*0.01+0.005,
+    vy: Math.random()*2+2,
+    vx: Math.random()*2-1,
+  }));
+
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    confettiParticles.forEach(p => {
+      ctx.beginPath();
+      ctx.lineWidth = p.r/2;
+      ctx.strokeStyle = p.color;
+      p.tiltAngle += p.tiltSpeed;
+      p.angle += p.angleSpeed;
+      p.y += p.vy;
+      p.x += Math.sin(p.angle);
+      p.tilt = Math.sin(p.tiltAngle)*12;
+      ctx.moveTo(p.x+p.tilt+p.r/4, p.y);
+      ctx.lineTo(p.x+p.tilt, p.y+p.tilt+p.r);
+      ctx.stroke();
+      if(p.y > canvas.height) { p.y = -20; p.x = Math.random()*canvas.width; }
+    });
+    confettiAnim = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function stopConfetti() {
+  if(confettiAnim) cancelAnimationFrame(confettiAnim);
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+}
+
+window.addEventListener('resize', () => {
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+</script>
+</body>
+</html>
