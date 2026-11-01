@@ -541,6 +541,14 @@
     <label>Cole os nomes aqui, um por linha</label>
     <textarea id="quick-list" placeholder="Maria Silva&#10;João Souza&#10;Ana Costa&#10;..."></textarea>
     <div id="quick-count" style="font-size:0.8rem; color:var(--muted); margin-top:0.5rem; min-height:1.1rem;"></div>
+    <div style="display:flex; align-items:center; gap:1rem; margin:0.75rem 0;">
+      <label style="margin:0; white-space:nowrap;">Número de ganhadores</label>
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <button class="qty-btn" id="quick-qty-down">−</button>
+        <span id="quick-qty-val" style="font-size:1.2rem; font-weight:800; min-width:2ch; text-align:center;">1</span>
+        <button class="qty-btn" id="quick-qty-up">+</button>
+      </div>
+    </div>
     <button id="btn-quick-draw" disabled>🎲 Sortear da lista</button>
   </div>
 
@@ -987,12 +995,32 @@ function parseQuickList() {
     .filter(l => l.length > 0);
 }
 
+/* Quantidade de ganhadores da lista rápida */
+let quickQty = 1;
+const quickQtyVal = document.getElementById('quick-qty-val');
+const quickQtyDown = document.getElementById('quick-qty-down');
+const quickQtyUp = document.getElementById('quick-qty-up');
+function updateQuickQty(n) {
+  quickQty = Math.max(1, n);
+  quickQtyVal.textContent = quickQty;
+  quickQtyDown.disabled = quickQty <= 1;
+}
+updateQuickQty(1);
+quickQtyDown.addEventListener('click', () => updateQuickQty(quickQty - 1));
+quickQtyUp.addEventListener('click', () => updateQuickQty(quickQty + 1));
+
 btnQuickDraw.addEventListener('click', () => {
-  const names = parseQuickList();
-  if (!names.length) return;
-  const winner = names[Math.floor(Math.random() * names.length)];
-  // Reutiliza o mesmo suspense e revelação, mas com 1 ganhador sem peso
-  revealQueue = [{ place: 1, name: winner, cups: null }];
+  let pool = parseQuickList();
+  if (!pool.length) return;
+  // Sorteia N nomes distintos (sem peso), depois revela do último ao 1º
+  const qty = Math.min(quickQty, pool.length);
+  const drawn = [];
+  for (let i = 0; i < qty; i++) {
+    const idx = Math.floor(Math.random() * pool.length);
+    drawn.push({ place: i + 1, name: pool[idx], cups: null });
+    pool.splice(idx, 1);
+  }
+  revealQueue = [...drawn].reverse();
   revealIdx = 0;
   alreadyRevealed = [];
   startSuspense(() => startReveal());
